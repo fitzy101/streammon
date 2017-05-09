@@ -22,22 +22,23 @@ type Stream struct {
 	Timeout int
 	Delim   string
 	Fields  []int
-	Lines   chan string
+	lines   chan string
 }
-
-type StreamReader interface{}
 
 var (
 	FieldDelim = `\$\{[0-9]*\}`
 )
 
+// NewStream constructs a Stream for processing of a file. This calls the
+// necessary field parsing functions before returning.
 func NewStream(pattern, cmd, delim, file string, timeout int, args []string) (*Stream, error) {
 	s := Stream{
-		Cmd:     "touch",
-		Args:    []string{"/users/WORK/Desktop/${0}"},
-		Delim:   " ",
+		Cmd:     cmd,
+		Args:    args,
+		Delim:   delim,
 		File:    file,
 		Timeout: timeout,
+		lines:   make(chan string),
 	}
 	reg, err := setupRegexp(pattern)
 	if err != nil {
@@ -57,48 +58,48 @@ func (s *Stream) openScanner() *bufio.Scanner {
 
 // openFile tails the Stream's file, returning the new lines back
 // via string channel.
-func (s *Stream) tailFile() chan string {
+func (s *Stream) tailFile(swr StreamWriter) {
 	conf := tail.Config{
 		Follow: true,
-		ReOpen: true,
+		Poll:   true,
 	}
 	t, err := tail.TailFile(s.File, conf)
 
-	// Resend the lines back to the listener.
-	lines := make(chan string)
+	// Resend the lines back to any Subscribers.
 	go func() {
 		for line := range t.Lines {
-			lines <- line.Text
+			if swr.Err() == nil {
+				swr.Publish(line.Text)
+			}
 			if line.Err != nil {
 				fmt.Fprintln(os.Stderr, "error reading %s: ", err)
-			} else {
-
 			}
 		}
 	}()
-	return lines
 }
 
 // ReadLines creates a string channel that the lines of the file
 // will be sent to.
-func (s *Stream) ReadLines() chan string {
-	lines := make(chan string)
+func (s *Stream) readLines() {
+	swr := NewStreamWriter(s)
 	if s.File == "" {
 		// We're reading from stdin.
 		scanner := s.openScanner()
 		go func() {
 			for scanner.Scan() {
-				lines <- scanner.Text()
+				if swr.Err() == nil {
+					swr.Publish(scanner.Text())
+				}
 			}
 			if err := scanner.Err(); err != nil {
 				fmt.Fprintln(os.Stderr, "error reading %s: ", err)
 			}
-			close(lines)
+			// We've exhausted the scanner.
+			swr.Close()
 		}()
-		return lines
 	} else {
-		// We'll tail the file instead.
-		return s.tailFile()
+		// Tail the file instead.
+		s.tailFile(swr)
 	}
 }
 
@@ -135,7 +136,9 @@ func (s *Stream) PrepArgs(line string) []string {
 				if field == 0 {
 					argStr = insertField(argStr, line, field)
 				} else {
-					argStr = insertField(argStr, spl[field], field)
+					// Field tokens start from index 1 (unless
+					// referring to the whole line).
+					argStr = insertField(argStr, spl[field-1], field)
 				}
 			}
 		}
@@ -171,8 +174,8 @@ func parseFields(args []string) []int {
 	return fields
 }
 
-// setupRegexp compiles the regular expression included, and
-// returns an error if it didn't compile.
+// setupRegexp compiles the regular expression included, and returns an error
+// the regex pattern didn't compile.
 func setupRegexp(pattern string) (*regexp.Regexp, error) {
 	r, err := regexp.Compile(pattern)
 	if err != nil {

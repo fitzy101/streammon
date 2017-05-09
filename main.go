@@ -12,9 +12,9 @@ func main() {
 		`[1].*`,
 		"touch",
 		" ",
-		"/users/WORK/Desktop/testing/fakelog",
+		"/users/WORK/Desktop/fakelog",
 		0,
-		[]string{"/users/WORK/Desktop/testing/${0}"},
+		[]string{"/users/WORK/Desktop/testing/${2}"},
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating stream.\n")
@@ -26,13 +26,12 @@ func main() {
 // watchStream sets up a watch on the Stream provided, and matches lines against
 // the Stream's regexp.
 func watchStream(s *stream.Stream) {
-	lines := s.ReadLines()
+	srw := stream.NewStreamReader(s)
 
 	// Listen for the lines received.
-	for line := range lines {
+	for line := range srw.Subscribe() {
 		match := s.Regexp.MatchString(line)
 		if match {
-			fmt.Println(line)
 			// Before running the command, we need to replace field
 			// tokens with the actual matched line fields.
 			preppedArgs := s.PrepArgs(line)
@@ -41,5 +40,4 @@ func watchStream(s *stream.Stream) {
 			}
 		}
 	}
-	fmt.Println("closing!")
 }
