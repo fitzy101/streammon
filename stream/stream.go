@@ -15,13 +15,13 @@ import (
 
 // Stream holds the information for the monitored stream.
 type Stream struct {
-	File    string
-	Cmd     string
-	Args    []string
 	Regexp  *regexp.Regexp
-	Timeout int
-	Delim   string
-	Fields  []int
+	file    string
+	cmd     string
+	timeout int
+	args    []string
+	delim   string
+	fields  []int
 	lines   chan string
 }
 
@@ -33,19 +33,20 @@ var (
 // necessary field parsing functions before returning.
 func NewStream(pattern, cmd, delim, file string, timeout int, args []string) (*Stream, error) {
 	s := Stream{
-		Cmd:     cmd,
-		Args:    args,
-		Delim:   delim,
-		File:    file,
-		Timeout: timeout,
+		cmd:     cmd,
+		args:    args,
+		delim:   delim,
+		file:    file,
+		timeout: timeout,
 		lines:   make(chan string),
 	}
 	reg, err := setupRegexp(pattern)
 	if err != nil {
 		return nil, err
 	}
+	s.fields = parseFields(s.args)
+
 	s.Regexp = reg
-	s.Fields = parseFields(s.Args)
 	return &s, nil
 }
 
@@ -63,10 +64,12 @@ func (s *Stream) tailFile(swr StreamWriter) {
 		Follow: true,
 		Poll:   true,
 	}
-	t, err := tail.TailFile(s.File, conf)
+	t, err := tail.TailFile(s.file, conf)
 
-	// Resend the lines back to any Subscribers.
+	// Catch any file closures that will cause a panic to unravel, so we
+	// can close the subscribers nicely.
 	go func() {
+		// Resend the lines back to any Subscribers.
 		for line := range t.Lines {
 			if swr.Err() == nil {
 				swr.Publish(line.Text)
@@ -75,6 +78,8 @@ func (s *Stream) tailFile(swr StreamWriter) {
 				fmt.Fprintln(os.Stderr, "error reading %s: ", err)
 			}
 		}
+		// Close the channel, we're done tailing.
+		swr.Close()
 	}()
 }
 
@@ -82,7 +87,7 @@ func (s *Stream) tailFile(swr StreamWriter) {
 // will be sent to.
 func (s *Stream) readLines() {
 	swr := NewStreamWriter(s)
-	if s.File == "" {
+	if s.file == "" {
 		// We're reading from stdin.
 		scanner := s.openScanner()
 		go func() {
@@ -105,8 +110,11 @@ func (s *Stream) readLines() {
 
 // execStreamComm is called with a matched line from the Stream, and executes
 // the command for that stream.
-func (s *Stream) ExecStreamComm(matchLn string, args []string) error {
-	cmd := exec.Command(s.Cmd, args...)
+func (s *Stream) ExecStreamComm(matchLn string) error {
+	// Before running the command, we need to replace field
+	// tokens with the actual matched line fields.
+	args := prepArgs(matchLn, s)
+	cmd := exec.Command(s.cmd, args...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
@@ -121,17 +129,17 @@ func (s *Stream) ExecStreamComm(matchLn string, args []string) error {
 // splitMatch takes a line that matched the Stream's regexp, and splits it on
 // the Streams delimiter. After that, it replaces any of the field tokens with
 // the actual field.
-func (s *Stream) PrepArgs(line string) []string {
-	spl := strings.Split(line, s.Delim)
+func prepArgs(line string, s *Stream) []string {
+	spl := strings.Split(line, s.delim)
 	preppedArgs := []string{}
 
 	// For all of the arguments, we want to replace any of the field tokens
 	// with the actual field. The output of this loop should be the arg
 	// string with the log line including the actual field text instead of
 	// the token.
-	for _, arg := range s.Args {
+	for _, arg := range s.args {
 		argStr := arg
-		for _, field := range s.Fields {
+		for _, field := range s.fields {
 			if len(spl) >= field {
 				if field == 0 {
 					argStr = insertField(argStr, line, field)

@@ -32,10 +32,7 @@ func watchStream(s *stream.Stream) {
 	for line := range srw.Subscribe() {
 		match := s.Regexp.MatchString(line)
 		if match {
-			// Before running the command, we need to replace field
-			// tokens with the actual matched line fields.
-			preppedArgs := s.PrepArgs(line)
-			if err := s.ExecStreamComm(line, preppedArgs); err != nil {
+			if err := s.ExecStreamComm(line); err != nil {
 				fmt.Fprintln(os.Stderr, "error exec command %s: ", err)
 			}
 		}
