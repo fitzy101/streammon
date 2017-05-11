@@ -2,22 +2,15 @@ package stream
 
 import (
 	"errors"
+	"fmt"
+	"os"
 )
 
-// StreamReader provides a method for a consumer of the Stream's output to
-// subscribe, ie. receive text coming through the stream.
-type StreamReader interface {
-	Subscribe() chan string
-	Err() error
-	Close()
-}
-
-// StreamWriter provides a method to publish to any subscribers of a stream.
-type StreamWriter interface {
-	Publish(string)
-	Err() error
-	Close()
-}
+var (
+	// numSubs tracks the number of subscribers. Will close when all are
+	// closed.
+	numSubs = 0
+)
 
 // StreamRW implements the StreamReader and StreamWriter interfaces for a given
 // Stream, allowing for communication between the interested parties.
@@ -34,6 +27,7 @@ func NewStreamReader(s *Stream) StreamReader {
 		stream:   s,
 		streamer: s.lines,
 	}
+	numSubs++
 	return &srw
 }
 
@@ -70,5 +64,10 @@ func (srw *StreamRW) Err() error {
 func (srw *StreamRW) Close() {
 	close(srw.streamer)
 	srw.err = errors.New("streamer closed for publishing")
+	numSubs--
+	if numSubs == 0 {
+		fmt.Fprintln(os.Stdout, "No more files to watch, closing.")
+		os.Exit(0)
+	}
 	return
 }

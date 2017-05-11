@@ -25,6 +25,21 @@ type Stream struct {
 	lines   chan string
 }
 
+// StreamReader provides functions for a consumer of the Stream's output to
+// subscribe, ie. receive text coming through the stream.
+type StreamReader interface {
+	Subscribe() chan string
+	Err() error
+	Close()
+}
+
+// StreamWriter provides functions to publish to any subscribers of a stream.
+type StreamWriter interface {
+	Publish(string)
+	Err() error
+	Close()
+}
+
 var (
 	FieldDelim = `\$\{[0-9]*\}`
 )
@@ -63,6 +78,7 @@ func (s *Stream) tailFile(swr StreamWriter) {
 	conf := tail.Config{
 		Follow: true,
 		Poll:   true,
+		Logger: tail.DiscardingLogger,
 	}
 	t, err := tail.TailFile(s.file, conf)
 
@@ -73,6 +89,8 @@ func (s *Stream) tailFile(swr StreamWriter) {
 		for line := range t.Lines {
 			if swr.Err() == nil {
 				swr.Publish(line.Text)
+			} else {
+				swr.Close()
 			}
 			if line.Err != nil {
 				fmt.Fprintln(os.Stderr, "error reading %s: ", err)
