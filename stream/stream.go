@@ -41,7 +41,7 @@ type StreamWriter interface {
 }
 
 var (
-	FieldDelim = `\$\{[0-9]*\}`
+	FieldDelim = `.*\#\{[0-9]*\}.*`
 )
 
 // NewStream constructs a Stream for processing of a file. This calls the
@@ -60,7 +60,6 @@ func NewStream(pattern, cmd, delim, file string, timeout int, args []string) (*S
 		return nil, err
 	}
 	s.fields = parseFields(s.args)
-
 	s.Regexp = reg
 	return &s, nil
 }
@@ -138,13 +137,14 @@ func (s *Stream) ExecStreamComm(matchLn string) error {
 	if err := cmd.Run(); err != nil {
 		return err
 	}
-	if out.String() != "" {
-		fmt.Printf("output: %s matched line: %s.\n", out.String(), matchLn)
-	}
+	// Do we want to print the output?
+	// if out.String() != "" {
+	// 	fmt.Printf("output: %s matched line: %s.\n", out.String(), matchLn)
+	// }
 	return nil
 }
 
-// splitMatch takes a line that matched the Stream's regexp, and splits it on
+// prepArgs takes a line that matched the Stream's regexp, and splits it on
 // the Streams delimiter. After that, it replaces any of the field tokens with
 // the actual field.
 func prepArgs(line string, s *Stream) []string {
@@ -174,21 +174,21 @@ func prepArgs(line string, s *Stream) []string {
 }
 
 // insertField replaces the field tokens with the field text.
-// For example if the string was "this is my ${5} field" and the 5th field was
+// For example if the string was "this is my $[5] field" and the 5th field was
 // "log", the output is "this is my log field".
 func insertField(str, replace string, field int) string {
-	fieldStr := fmt.Sprintf("${%v}", field)
+	fieldStr := fmt.Sprintf("#{%v}", field)
 	return strings.Replace(str, fieldStr, replace, -1)
 }
 
-// parseFields searches the arguments of a Stream for ${[0-9]} fields for
+// parseFields searches the arguments of a Stream for #{[0-9]} fields for
 // the commands, and returns an []int of the fields.
 func parseFields(args []string) []int {
 	fields := []int{}
 	for _, arg := range args {
 		if match, _ := regexp.MatchString(FieldDelim, arg); match {
 			// Are there any field tokens found?
-			token := strings.Split(arg, `${`)[1]
+			token := strings.Split(arg, `#{`)[1]
 			token = strings.Split(token, `}`)[0]
 			if i, err := strconv.Atoi(token); err != nil {
 				fmt.Fprintf(os.Stderr, "error parsing fields: %s", err)
