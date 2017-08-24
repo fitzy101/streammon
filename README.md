@@ -60,7 +60,7 @@ The arguments for streammon:
 $ journalctl -fu isc-dhcp-server | streammon -a "ip:#{8} mac:#{10}" -c ~/save-to-desktop.sh -r DHCPREQUEST
 ```
 
-We're going to monitor the output from the isc-dhcp logs for any DHCPREQUEST that comes through, and pass the 8th field (the IP address) to the command. In this case, the command is a script that simply pushes the argument to a file.
+We're going to monitor the output from the isc-dhcp logs for any DHCPREQUEST that comes through, and pass the 8th field (the IP address) and 10th field (the MAC address) to the command. In this case, the command is a script that simply pushes the argument to a file.
 
 ```
 $ cat ~/save-to-desktop.sh
