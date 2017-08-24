@@ -4,6 +4,7 @@ When a match is found, a user-defined (shell) command is executed. The user can 
 within the command.
 
 # Usage
+```
 $ streammon -h
 Usage of streammon:
   -a string
@@ -26,6 +27,7 @@ Usage of streammon:
         a regular expression to match. (default ".*")
   -regexp string
         a regular expression to match. (default ".*")
+```
 
 ## Arguments
 The arguments provided to the command to be run when a match is found can reference the fields within the command via the token #{n}. Where n is the field number when split by the delimeter provided by -d. If #{0} is provided or the field doesn't exist, the entire line matched will be passed as the command's first argument.
