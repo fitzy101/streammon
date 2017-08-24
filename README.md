@@ -3,6 +3,17 @@ A program that monitors streams of text (eg stdin, local file) and looks for lin
 When a match is found, a user-defined (shell) command is executed. The user can reference fields from the matched line
 within the command.
 
+Current latest version: 0.1.
+
+# Building streammon
+Use the `go build` command:
+
+```
+$ go build -o streammon main.go
+```
+You can then add the executable to somewhere in your $PATH.
+Streammon was written with go 1.8, but is test to work with versions above 1.6.
+
 # Usage
 ```
 $ streammon -h
@@ -80,3 +91,9 @@ $ cat mylog
 - Implement config file specification, including ability to monitor several streams at once.
 - Provide flag for displaying output of monitored streams.
 - Implement a timeout feature, where the command will be run after waiting for the specified timeout.
+
+## Known issues
+- Multiple flags will sometimes not be output correctly - ie they'll be missing the parsed line field value.
+
+# License
+Streammon is licensed under the MIT license.
