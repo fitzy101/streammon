@@ -15,45 +15,46 @@ import (
 
 // Stream holds the information for the monitored stream.
 type Stream struct {
-	Regexp  *regexp.Regexp
-	file    string
-	cmd     string
-	timeout int
-	args    []string
-	delim   string
-	fields  []int
-	lines   chan string
+	Regexp *regexp.Regexp
+	file   string
+	cmd    string
+	// timeout int
+	args   []string
+	delim  string
+	fields []int
+	lines  chan string
 }
 
-// StreamReader provides functions for a consumer of the Stream's output to
+// Reader provides functions for a consumer of the Stream's output to
 // subscribe, ie. receive text coming through the stream.
-type StreamReader interface {
+type Reader interface {
 	Subscribe() chan string
 	Err() error
 	Close()
 }
 
-// StreamWriter provides functions to publish to any subscribers of a stream.
-type StreamWriter interface {
+// Writer provides functions to publish to any subscribers of a stream.
+type Writer interface {
 	Publish(string)
 	Err() error
 	Close()
 }
 
 var (
+	// FieldDelim - regex that matches a field pattern.
 	FieldDelim = `.*\#\{[0-9]*\}.*`
 )
 
 // NewStream constructs a Stream for processing of a file. This calls the
 // necessary field parsing functions before returning.
-func NewStream(pattern, cmd, delim, file string, timeout int, args []string) (*Stream, error) {
+func NewStream(pattern, cmd, delim, file string, args []string) (*Stream, error) {
 	s := Stream{
-		cmd:     cmd,
-		args:    args,
-		delim:   delim,
-		file:    file,
-		timeout: timeout,
-		lines:   make(chan string),
+		cmd:   cmd,
+		args:  args,
+		delim: delim,
+		file:  file,
+		lines: make(chan string),
+		// timeout: timeout,
 	}
 	reg, err := setupRegexp(pattern)
 	if err != nil {
@@ -73,7 +74,7 @@ func (s *Stream) openScanner() *bufio.Scanner {
 
 // openFile tails the Stream's file, returning the new lines back
 // via string channel.
-func (s *Stream) tailFile(swr StreamWriter) {
+func (s *Stream) tailFile(swr Writer) {
 	conf := tail.Config{
 		Follow: true,
 		Poll:   true,
@@ -92,7 +93,7 @@ func (s *Stream) tailFile(swr StreamWriter) {
 				swr.Close()
 			}
 			if line.Err != nil {
-				fmt.Fprintln(os.Stderr, "error reading %s: ", err)
+				fmt.Fprintf(os.Stderr, "error reading %s: ", err)
 			}
 		}
 		// Close the channel, we're done tailing.
@@ -103,7 +104,7 @@ func (s *Stream) tailFile(swr StreamWriter) {
 // ReadLines creates a string channel that the lines of the file
 // will be sent to.
 func (s *Stream) readLines() {
-	swr := NewStreamWriter(s)
+	swr := NewWriter(s)
 	if s.file == "" {
 		// We're reading from stdin.
 		scanner := s.openScanner()
@@ -114,7 +115,7 @@ func (s *Stream) readLines() {
 				}
 			}
 			if err := scanner.Err(); err != nil {
-				fmt.Fprintln(os.Stderr, "error reading %s: ", err)
+				fmt.Fprintf(os.Stderr, "error reading %s: ", err)
 			}
 			// We've exhausted the scanner.
 			swr.Close()
@@ -125,7 +126,7 @@ func (s *Stream) readLines() {
 	}
 }
 
-// execStreamComm is called with a matched line from the Stream, and executes
+// ExecStreamComm is called with a matched line from the Stream, and executes
 // the command for that stream.
 func (s *Stream) ExecStreamComm(matchLn string) error {
 	// Before running the command, we need to replace field
@@ -138,9 +139,9 @@ func (s *Stream) ExecStreamComm(matchLn string) error {
 		return err
 	}
 	// Do we want to print the output?
-	// if out.String() != "" {
-	// 	fmt.Printf("output: %s matched line: %s.\n", out.String(), matchLn)
-	// }
+	if out.String() != "" {
+		fmt.Printf("output: %s matched line: %s.\n", out.String(), matchLn)
+	}
 	return nil
 }
 
@@ -174,7 +175,7 @@ func prepArgs(line string, s *Stream) []string {
 }
 
 // insertField replaces the field tokens with the field text.
-// For example if the string was "this is my $[5] field" and the 5th field was
+// For example if the string was "this is my #{5} field" and the 5th field was
 // "log", the output is "this is my log field".
 func insertField(str, replace string, field int) string {
 	fieldStr := fmt.Sprintf("#{%v}", field)

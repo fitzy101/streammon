@@ -12,18 +12,18 @@ var (
 	numSubs = 0
 )
 
-// StreamRW implements the StreamReader and StreamWriter interfaces for a given
+// RW implements the Reader and Writer interfaces for a given
 // Stream, allowing for communication between the interested parties.
-type StreamRW struct {
+type RW struct {
 	stream   *Stream
 	streamer chan string
 	err      error
 }
 
-// NewStreamReader returns an encapsulated StreamRW allowing the consumer to
+// NewReader returns an encapsulated RW allowing the consumer to
 // subscribe to text coming from the Stream.
-func NewStreamReader(s *Stream) StreamReader {
-	srw := StreamRW{
+func NewReader(s *Stream) Reader {
+	srw := RW{
 		stream:   s,
 		streamer: s.lines,
 	}
@@ -31,10 +31,10 @@ func NewStreamReader(s *Stream) StreamReader {
 	return &srw
 }
 
-// NewStreamWriter returns an encapsulated StreamRW allowing the consumer to
+// NewWriter returns an encapsulated RW allowing the consumer to
 // subscribe to text coming from the Stream.
-func NewStreamWriter(s *Stream) StreamWriter {
-	srw := StreamRW{
+func NewWriter(s *Stream) Writer {
+	srw := RW{
 		stream:   s,
 		streamer: s.lines,
 	}
@@ -42,7 +42,7 @@ func NewStreamWriter(s *Stream) StreamWriter {
 }
 
 // Subscribe returns a channel where text will be sent unless closed.
-func (srw *StreamRW) Subscribe() chan string {
+func (srw *RW) Subscribe() chan string {
 	go func() {
 		srw.stream.readLines()
 	}()
@@ -50,18 +50,18 @@ func (srw *StreamRW) Subscribe() chan string {
 }
 
 // Publish sends a string to the channel that Subscribers will recieve.
-func (srw *StreamRW) Publish(line string) {
+func (srw *RW) Publish(line string) {
 	srw.streamer <- line
 	return
 }
 
-// Err returns any errors associated with the StreamRW.
-func (srw *StreamRW) Err() error {
+// Err returns any errors associated with the RW.
+func (srw *RW) Err() error {
 	return srw.err
 }
 
 // Close finishes the channel for any Subscribers.
-func (srw *StreamRW) Close() {
+func (srw *RW) Close() {
 	close(srw.streamer)
 	srw.err = errors.New("streamer closed for publishing")
 	numSubs--
