@@ -3,7 +3,7 @@ A program that monitors streams of text (eg stdin, local file) and looks for lin
 When a match is found, a user-defined (shell) command is executed. The user can reference fields from the matched line
 within the command.
 
-Current latest version: 0.1.
+Current latest version: v0.1.0
 
 # Building streammon
 Use the `go build` command:
