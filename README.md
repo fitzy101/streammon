@@ -89,7 +89,7 @@ ip:10.1.100.8 mac:d1:87:f8:5e:9d:1f
 - Implement a timeout feature, where the command will be run after waiting for the specified timeout.
 
 ## Known issues
-- Multiple flags will sometimes not be output correctly - ie they'll be missing the parsed line field value.
+- Multiple flags will sometimes not be output correctly when they are not seperated by a space in the command line argument - ie they'll be unparsed in the output. They work as expected when they are seperated by a space.
 
 # License
 Streammon is licensed under the MIT license.
