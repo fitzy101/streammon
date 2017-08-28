@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
@@ -87,23 +88,29 @@ func constructArgs() streamArgs {
 	for _, arg := range f {
 		a.args = append(a.args, arg)
 	}
-	if str, ok := validate(&a); !ok {
-		exitErr(str)
+	if err := validate(&a); err != nil {
+		exitErr(err.Error())
 	}
 	return a
 }
 
+var (
+	ErrFilepath = "a file must be provided or piped through stdin."
+	ErrRegexp   = "you must provide a regular expression"
+	ErrCommand  = "you must provide a command to run"
+)
+
 func validate(a *streamArgs) (string, bool) {
 	if a.filepath == "" && !isStdin() {
-		return "A file must be provided (or through a pipe).\n", false
+		return errors.New(ErrFilepath)
 	}
 	if a.regexp == "" {
-		return "You must provide a regular expression.\n", false
+		return errors.New(ErrRegexp)
 	}
 	if a.command == "" {
-		return "You must provide a command to run.\n", false
+		return errors.New(ErrCommand)
 	}
-	return "", true
+	return nil
 }
 
 // isStdin returns true when file has data piped from stdin.
