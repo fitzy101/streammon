@@ -100,7 +100,7 @@ var (
 	ErrCommand  = "you must provide a command to run"
 )
 
-func validate(a *streamArgs) (string, bool) {
+func validate(a *streamArgs) error {
 	if a.filepath == "" && !isStdin() {
 		return errors.New(ErrFilepath)
 	}
