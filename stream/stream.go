@@ -186,15 +186,19 @@ func insertField(str, replace string, field int) string {
 func parseFields(args []string) []int {
 	fields := []int{}
 	for _, arg := range args {
-		if match, _ := regexp.MatchString(FieldDelim, arg); match {
-			// Are there any field tokens found?
-			token := strings.Split(arg, `#{`)[1]
-			token = strings.Split(token, `}`)[0]
+		ind := strings.Index(arg, `#{`)
+		for ind != -1 {
+			token := strings.Split(arg[ind+2:], `}`)[0]
 			if i, err := strconv.Atoi(token); err != nil {
 				fmt.Fprintf(os.Stderr, "error parsing fields: %s", err)
+				break
 			} else {
 				fields = append(fields, i)
 			}
+
+			// There could be more than one, skip to the next token.
+			arg = arg[ind+len(token)+3:]
+			ind = strings.Index(arg, `#{`)
 		}
 	}
 	return fields
