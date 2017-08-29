@@ -156,8 +156,7 @@ func prepArgs(line string, s *Stream) []string {
 	// with the actual field. The output of this loop should be the arg
 	// string with the log line including the actual field text instead of
 	// the token.
-	for _, arg := range s.args {
-		argStr := arg
+	for _, argStr := range s.args {
 		for _, field := range s.fields {
 			if len(spl) >= field {
 				if field == 0 {
