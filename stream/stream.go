@@ -209,7 +209,6 @@ func parseFields(args []string) []int {
 func setupRegexp(pattern string) (*regexp.Regexp, error) {
 	r, err := regexp.Compile(pattern)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return r, err
 	}
 	return r, nil

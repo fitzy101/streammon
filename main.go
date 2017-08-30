@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	re "regexp"
 	"strings"
 
 	"github.com/fitzy101/streammon/stream"
@@ -96,7 +97,7 @@ func constructArgs() streamArgs {
 
 var (
 	ErrFilepath = "a file must be provided or piped through stdin."
-	ErrRegexp   = "you must provide a regular expression"
+	ErrRegexp   = "you must provide a valid regular expression"
 	ErrCommand  = "you must provide a command to run"
 )
 
@@ -106,6 +107,12 @@ func validate(a *streamArgs) error {
 	}
 	if a.regexp == "" {
 		return errors.New(ErrRegexp)
+	} else {
+		// Check if its valid regexp
+		_, err := re.Compile(a.regexp)
+		if err != nil {
+			return errors.New(ErrRegexp)
+		}
 	}
 	if a.command == "" {
 		return errors.New(ErrCommand)
