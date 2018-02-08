@@ -20,6 +20,7 @@ var (
 	command   string
 	timeout   int
 	cargs     string
+	log       bool
 	// config    string
 )
 
@@ -31,24 +32,33 @@ func init() {
 		dregexp    = "a regular expression to match."
 		dcommand   = "a command to run after a match is found."
 		dargs      = "a quoted string of arguments to the command."
+		dlog       = "an option to turn on log output"
 		// dtimeout   = "a timeout to wait before running the command."
 		// dconfig    = "a configuration file to read from."
 	)
 
 	// --file, -f
-	flag.StringVar(&filepath, "f / file", "", dfilepath)
+	flag.StringVar(&filepath, "file", "", dfilepath)
+	flag.StringVar(&filepath, "f", "", dfilepath)
 
 	// --delimeter, -d
-	flag.StringVar(&delimeter, "d / delimeter", " ", ddelimeter)
+	flag.StringVar(&delimeter, "delimeter", " ", ddelimeter)
+	flag.StringVar(&delimeter, "d", " ", ddelimeter)
 
 	// --regexp, -r
-	flag.StringVar(&regexp, "r / regexp", ".*", dregexp)
+	flag.StringVar(&regexp, "regexp", ".*", dregexp)
+	flag.StringVar(&regexp, "r", ".*", dregexp)
 
 	// --command, -c
-	flag.StringVar(&command, "c / command", "", dcommand)
+	flag.StringVar(&command, "command", "", dcommand)
+	flag.StringVar(&command, "c", "", dcommand)
 
 	// --args, -a
-	flag.StringVar(&cargs, "a / args", "", dargs)
+	flag.StringVar(&cargs, "args", "", dargs)
+	flag.StringVar(&cargs, "a", "", dargs)
+
+	// -l
+	flag.BoolVar(&log, "l", false, dlog)
 
 	// TODO: Implement.
 	// --timeout, -t
@@ -135,6 +145,9 @@ func main() {
 		strArgs.args,
 		// strArgs.timeout, TODO: implement.
 	)
+	if log {
+		stream.LogDebug = true
+	}
 	if err != nil {
 		exitErr("error creating stream.\n")
 	} else {

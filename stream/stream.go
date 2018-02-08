@@ -16,6 +16,10 @@ import (
 	"github.com/hpcloud/tail"
 )
 
+var (
+	LogDebug = false
+)
+
 // Stream holds the information for the monitored stream.
 type Stream struct {
 	Regexp *regexp.Regexp
@@ -141,8 +145,8 @@ func (s *Stream) ExecStreamComm(matchLn string) error {
 	if err := cmd.Run(); err != nil {
 		return err
 	}
-	// Do we want to print the output?
-	if out.String() != "" {
+
+	if out.String() != "" && LogDebug {
 		fmt.Printf("output: %s matched line: %s.\n", out.String(), matchLn)
 	}
 	return nil
