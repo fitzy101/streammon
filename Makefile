@@ -3,7 +3,7 @@ GC=go build
 SRC=main.go
 PROG=streammon
 
-light-man: $(SRC)
+streammon: $(SRC)
 	go get ./...
 	go test ./...
 	$(GC) $(GOBUILDFLAGS) -o $(PROG) $(SRC)
