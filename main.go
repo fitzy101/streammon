@@ -1,3 +1,5 @@
+// main handles the command line validation and configuration of the underlying
+// stream to watch. The contains the main run loop in watchStream().
 package main
 
 import (
@@ -34,25 +36,21 @@ func init() {
 	)
 
 	// --file, -f
-	flag.StringVar(&filepath, "file", "", dfilepath)
-	flag.StringVar(&filepath, "f", "", dfilepath)
+	flag.StringVar(&filepath, "f / file", "", dfilepath)
 
 	// --delimeter, -d
-	flag.StringVar(&delimeter, "delimeter", " ", ddelimeter)
-	flag.StringVar(&delimeter, "d", " ", ddelimeter)
+	flag.StringVar(&delimeter, "d / delimeter", " ", ddelimeter)
 
 	// --regexp, -r
-	flag.StringVar(&regexp, "regexp", ".*", dregexp)
-	flag.StringVar(&regexp, "r", ".*", dregexp)
+	flag.StringVar(&regexp, "r / regexp", ".*", dregexp)
 
 	// --command, -c
-	flag.StringVar(&command, "command", "", dcommand)
-	flag.StringVar(&command, "c", "", dcommand)
+	flag.StringVar(&command, "c / command", "", dcommand)
 
 	// --args, -a
-	flag.StringVar(&cargs, "args", "", dargs)
-	flag.StringVar(&cargs, "a", "", dargs)
+	flag.StringVar(&cargs, "a / args", "", dargs)
 
+	// TODO: Implement.
 	// --timeout, -t
 	//flag.IntVar(&timeout, "timeout", 0, dtimeout)
 	//flag.IntVar(&timeout, "t", 0, dtimeout)
@@ -96,26 +94,26 @@ func constructArgs() streamArgs {
 }
 
 var (
-	ErrFilepath = "a file must be provided or piped through stdin."
-	ErrRegexp   = "you must provide a valid regular expression"
-	ErrCommand  = "you must provide a command to run"
+	errFilepath = "a file must be provided or piped through stdin."
+	errRegexp   = "you must provide a valid regular expression"
+	errCommand  = "you must provide a command to run"
 )
 
 func validate(a *streamArgs) error {
 	if a.filepath == "" && !isStdin() {
-		return errors.New(ErrFilepath)
+		return errors.New(errFilepath)
 	}
 	if a.regexp == "" {
-		return errors.New(ErrRegexp)
-	} else {
-		// Check if its valid regexp
-		_, err := re.Compile(a.regexp)
-		if err != nil {
-			return errors.New(ErrRegexp)
-		}
+		return errors.New(errRegexp)
 	}
+	// Check if its valid regexp
+	_, err := re.Compile(a.regexp)
+	if err != nil {
+		return errors.New(errRegexp)
+	}
+
 	if a.command == "" {
-		return errors.New(ErrCommand)
+		return errors.New(errCommand)
 	}
 	return nil
 }

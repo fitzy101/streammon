@@ -83,7 +83,7 @@ func TestPrepArgs(t *testing.T) {
 		if len(resp) != len(test.exp) {
 			t.Errorf("response was different length, expected %v, got %v", test.exp, resp)
 		}
-		for idx, _ := range resp {
+		for idx := range resp {
 			if strings.Compare(resp[idx], test.exp[idx]) != 0 {
 				t.Errorf("response strings were different, expected %v, got %v", test.exp[idx], resp[idx])
 			}
@@ -123,7 +123,7 @@ func TestParseFields(t *testing.T) {
 		if len(resp) != len(test.exp) {
 			t.Errorf("response was different length, expected %v, got %v", test.exp, resp)
 		}
-		for idx, _ := range resp {
+		for idx := range resp {
 			if resp[idx] != test.exp[idx] {
 				t.Errorf("response ints were different, expected %v, got %v", test.exp[idx], resp[idx])
 			}

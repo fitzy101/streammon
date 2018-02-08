@@ -1,3 +1,6 @@
+// Package stream contains the main logic for handling actions within a stream,
+// such as reading the lines retrieved, setting up the command to run, and
+// executing the command.
 package stream
 
 import (

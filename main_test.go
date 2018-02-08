@@ -12,20 +12,20 @@ func TestValidate(t *testing.T) {
 	}{
 		{
 			args: &streamArgs{},
-			err:  errors.New(ErrFilepath),
+			err:  errors.New(errFilepath),
 		},
 		{
 			args: &streamArgs{
 				filepath: "/home",
 			},
-			err: errors.New(ErrRegexp),
+			err: errors.New(errRegexp),
 		},
 		{
 			args: &streamArgs{
 				filepath: "/home",
 				regexp:   ".*",
 			},
-			err: errors.New(ErrCommand),
+			err: errors.New(errCommand),
 		},
 		{
 			args: &streamArgs{
