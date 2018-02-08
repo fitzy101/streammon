@@ -1,3 +1,6 @@
+// Package stream contains the main logic for handling actions within a stream,
+// such as reading the lines retrieved, setting up the command to run, and
+// executing the command.
 package stream
 
 import (
@@ -11,6 +14,10 @@ import (
 	"strings"
 
 	"github.com/hpcloud/tail"
+)
+
+var (
+	LogDebug = false
 )
 
 // Stream holds the information for the monitored stream.
@@ -138,8 +145,8 @@ func (s *Stream) ExecStreamComm(matchLn string) error {
 	if err := cmd.Run(); err != nil {
 		return err
 	}
-	// Do we want to print the output?
-	if out.String() != "" {
+
+	if out.String() != "" && LogDebug {
 		fmt.Printf("output: %s matched line: %s.\n", out.String(), matchLn)
 	}
 	return nil
@@ -156,8 +163,7 @@ func prepArgs(line string, s *Stream) []string {
 	// with the actual field. The output of this loop should be the arg
 	// string with the log line including the actual field text instead of
 	// the token.
-	for _, arg := range s.args {
-		argStr := arg
+	for _, argStr := range s.args {
 		for _, field := range s.fields {
 			if len(spl) >= field {
 				if field == 0 {
@@ -187,15 +193,19 @@ func insertField(str, replace string, field int) string {
 func parseFields(args []string) []int {
 	fields := []int{}
 	for _, arg := range args {
-		if match, _ := regexp.MatchString(FieldDelim, arg); match {
-			// Are there any field tokens found?
-			token := strings.Split(arg, `#{`)[1]
-			token = strings.Split(token, `}`)[0]
+		ind := strings.Index(arg, `#{`)
+		for ind != -1 {
+			token := strings.Split(arg[ind+2:], `}`)[0]
 			if i, err := strconv.Atoi(token); err != nil {
 				fmt.Fprintf(os.Stderr, "error parsing fields: %s", err)
+				break
 			} else {
 				fields = append(fields, i)
 			}
+
+			// There could be more than one, skip to the next token.
+			arg = arg[ind+len(token)+3:]
+			ind = strings.Index(arg, `#{`)
 		}
 	}
 	return fields
@@ -206,7 +216,6 @@ func parseFields(args []string) []int {
 func setupRegexp(pattern string) (*regexp.Regexp, error) {
 	r, err := regexp.Compile(pattern)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
 		return r, err
 	}
 	return r, nil

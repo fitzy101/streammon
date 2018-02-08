@@ -1,9 +1,13 @@
+// main handles the command line validation and configuration of the underlying
+// stream to watch. The contains the main run loop in watchStream().
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"os"
+	re "regexp"
 	"strings"
 
 	"github.com/fitzy101/streammon/stream"
@@ -16,6 +20,7 @@ var (
 	command   string
 	timeout   int
 	cargs     string
+	log       bool
 	// config    string
 )
 
@@ -27,6 +32,7 @@ func init() {
 		dregexp    = "a regular expression to match."
 		dcommand   = "a command to run after a match is found."
 		dargs      = "a quoted string of arguments to the command."
+		dlog       = "an option to turn on log output"
 		// dtimeout   = "a timeout to wait before running the command."
 		// dconfig    = "a configuration file to read from."
 	)
@@ -51,6 +57,10 @@ func init() {
 	flag.StringVar(&cargs, "args", "", dargs)
 	flag.StringVar(&cargs, "a", "", dargs)
 
+	// -l
+	flag.BoolVar(&log, "l", false, dlog)
+
+	// TODO: Implement.
 	// --timeout, -t
 	//flag.IntVar(&timeout, "timeout", 0, dtimeout)
 	//flag.IntVar(&timeout, "t", 0, dtimeout)
@@ -87,23 +97,35 @@ func constructArgs() streamArgs {
 	for _, arg := range f {
 		a.args = append(a.args, arg)
 	}
-	if str, ok := validate(&a); !ok {
-		exitErr(str)
+	if err := validate(&a); err != nil {
+		exitErr(err.Error())
 	}
 	return a
 }
 
-func validate(a *streamArgs) (string, bool) {
+var (
+	errFilepath = "a file must be provided or piped through stdin."
+	errRegexp   = "you must provide a valid regular expression"
+	errCommand  = "you must provide a command to run"
+)
+
+func validate(a *streamArgs) error {
 	if a.filepath == "" && !isStdin() {
-		return "A file must be provided (or through a pipe).\n", false
+		return errors.New(errFilepath)
 	}
 	if a.regexp == "" {
-		return "You must provide a regular expression.\n", false
+		return errors.New(errRegexp)
 	}
+	// Check if its valid regexp
+	_, err := re.Compile(a.regexp)
+	if err != nil {
+		return errors.New(errRegexp)
+	}
+
 	if a.command == "" {
-		return "You must provide a command to run.\n", false
+		return errors.New(errCommand)
 	}
-	return "", true
+	return nil
 }
 
 // isStdin returns true when file has data piped from stdin.
@@ -123,6 +145,9 @@ func main() {
 		strArgs.args,
 		// strArgs.timeout, TODO: implement.
 	)
+	if log {
+		stream.LogDebug = true
+	}
 	if err != nil {
 		exitErr("error creating stream.\n")
 	} else {
