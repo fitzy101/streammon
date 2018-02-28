@@ -23,29 +23,14 @@ Streammon was written with go 1.9.2, but is tested to work with versions above 1
 
 # Usage
 ```
-$ streammon -h
-Usage of streammon:
-  -a string
-    	a quoted string of arguments to the command.
-  -args string
-    	a quoted string of arguments to the command.
-  -c string
-    	a command to run after a match is found.
-  -command string
-    	a command to run after a match is found.
-  -d string
-    	a delimeter to split a matching line. (default " ")
-  -delimeter string
-    	a delimeter to split a matching line. (default " ")
-  -f string
-    	a full path to a file to monitor.
-  -file string
-    	a full path to a file to monitor.
-  -l	an option to turn on log output
-  -r string
-    	a regular expression to match. (default ".*")
-  -regexp string
-    	a regular expression to match. (default ".*")
+$ streammon
+Usage: streammon [OPTIONS]...
+		-f/--file: a full path to a file to monitor.
+		-d/--delimeter a delimeter to split a matching line.
+		-r/--regexp a regular expression to match.
+		-c/--command a command to run after a match is found.
+		-a/--args a quoted string of arguments to the command.
+		-l an option to turn on log output
 ```
 
 ## Arguments
