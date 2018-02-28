@@ -3,6 +3,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"flag"
 	"fmt"
@@ -24,18 +25,31 @@ var (
 	// config    string
 )
 
+const (
+	dfilepath  = "a full path to a file to monitor."
+	ddelimeter = "a delimeter to split a matching line."
+	dregexp    = "a regular expression to match."
+	dcommand   = "a command to run after a match is found."
+	dargs      = "a quoted string of arguments to the command."
+	dlog       = "an option to turn on log output"
+	// dtimeout   = "a timeout to wait before running the command."
+	// dconfig    = "a configuration file to read from."
+)
+
+func usage() string {
+	var sbuff bytes.Buffer
+	sbuff.WriteString("Usage: streammon [OPTIONS]...\n")
+	sbuff.WriteString(fmt.Sprintf("\t\t-f/--file: %s\n", dfilepath))
+	sbuff.WriteString(fmt.Sprintf("\t\t-d/--delimeter %s\n", ddelimeter))
+	sbuff.WriteString(fmt.Sprintf("\t\t-r/--regexp %s\n", dregexp))
+	sbuff.WriteString(fmt.Sprintf("\t\t-c/--command %s\n", dcommand))
+	sbuff.WriteString(fmt.Sprintf("\t\t-a/--args %s\n", dargs))
+	sbuff.WriteString(fmt.Sprintf("\t\t-l %s\n", dlog))
+	return sbuff.String()
+}
+
 // init: setup the command line flags & usage message.
 func init() {
-	const (
-		dfilepath  = "a full path to a file to monitor."
-		ddelimeter = "a delimeter to split a matching line."
-		dregexp    = "a regular expression to match."
-		dcommand   = "a command to run after a match is found."
-		dargs      = "a quoted string of arguments to the command."
-		dlog       = "an option to turn on log output"
-		// dtimeout   = "a timeout to wait before running the command."
-		// dconfig    = "a configuration file to read from."
-	)
 
 	// --file, -f
 	flag.StringVar(&filepath, "file", "", dfilepath)
@@ -135,7 +149,15 @@ func isStdin() bool {
 }
 
 func main() {
+	flag.Usage = func() {
+		exitErr(usage())
+	}
 	flag.Parse()
+
+	if len(os.Args) == 1 {
+		exitErr(usage())
+	}
+
 	strArgs := constructArgs()
 	s, err := stream.NewStream(
 		strArgs.regexp,
