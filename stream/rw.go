@@ -12,7 +12,7 @@ var (
 	numSubs = 0
 )
 
-// RW implements the Reader and Writer interfaces for a given
+// RW implements the Subscriber and Publisher interfaces for a given
 // Stream, allowing for communication between the interested parties.
 type RW struct {
 	stream   *Stream
@@ -20,9 +20,9 @@ type RW struct {
 	err      error
 }
 
-// NewReader returns an encapsulated RW allowing the consumer to
+// NewSubscriber returns an encapsulated RW allowing the consumer to
 // subscribe to text coming from the Stream.
-func NewReader(s *Stream) Reader {
+func NewSubscriber(s *Stream) Subscriber {
 	srw := RW{
 		stream:   s,
 		streamer: s.lines,
@@ -31,9 +31,9 @@ func NewReader(s *Stream) Reader {
 	return &srw
 }
 
-// NewWriter returns an encapsulated RW allowing the consumer to
+// NewPublisher returns an encapsulated RW allowing the consumer to
 // subscribe to text coming from the Stream.
-func NewWriter(s *Stream) Writer {
+func NewPublisher(s *Stream) Publisher {
 	srw := RW{
 		stream:   s,
 		streamer: s.lines,

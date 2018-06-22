@@ -25,23 +25,23 @@ type Stream struct {
 	Regexp *regexp.Regexp
 	file   string
 	cmd    string
-	// timeout int
 	args   []string
 	delim  string
 	fields []int
 	lines  chan string
+	// timeout int
 }
 
-// Reader provides functions for a consumer of the Stream's output to
+// Subscriber provides functions for a consumer of the Stream's output to
 // subscribe, ie. receive text coming through the stream.
-type Reader interface {
+type Subscriber interface {
 	Subscribe() chan string
 	Err() error
 	Close()
 }
 
-// Writer provides functions to publish to any subscribers of a stream.
-type Writer interface {
+// Publisher provides functions to publish to any subscribers of a stream.
+type Publisher interface {
 	Publish(string)
 	Err() error
 	Close()
@@ -81,7 +81,7 @@ func (s *Stream) openScanner() *bufio.Scanner {
 
 // openFile tails the Stream's file, returning the new lines back
 // via string channel.
-func (s *Stream) tailFile(swr Writer) {
+func (s *Stream) tailFile(swr Publisher) {
 	conf := tail.Config{
 		Follow: true,
 		Poll:   true,
@@ -108,10 +108,10 @@ func (s *Stream) tailFile(swr Writer) {
 	}()
 }
 
-// ReadLines creates a string channel that the lines of the file
+// readLines creates a string channel that the lines of the file
 // will be sent to.
 func (s *Stream) readLines() {
-	swr := NewWriter(s)
+	swr := NewPublisher(s)
 	if s.file == "" {
 		// We're reading from stdin.
 		scanner := s.openScanner()
