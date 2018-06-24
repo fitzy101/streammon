@@ -130,7 +130,6 @@ func parseConfigFile(filep string) ([]streamArgs, error) {
 	}
 
 	for _, c := range allConf {
-		fmt.Println("validating: ", c.Filepath)
 		resp = append(resp, constructArgs(
 			c.Filepath,
 			c.Delimiter,

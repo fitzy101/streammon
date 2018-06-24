@@ -17,6 +17,8 @@ import (
 )
 
 var (
+	// LogDebug controls the logging level, when true the stream will
+	// write logs to stdout.
 	LogDebug = false
 )
 
@@ -139,6 +141,11 @@ func (s *Stream) ExecStreamComm(matchLn string) error {
 	// Before running the command, we need to replace field
 	// tokens with the actual matched line fields.
 	args := prepArgs(matchLn, s)
+
+	if LogDebug {
+		fmt.Printf("calling %s with args %v\n", s.cmd, args)
+	}
+
 	cmd := exec.Command(s.cmd, args...)
 	var out bytes.Buffer
 	cmd.Stdout = &out
