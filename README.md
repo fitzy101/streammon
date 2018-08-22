@@ -3,6 +3,7 @@ A program that monitors streams of text (eg stdin, local file) and looks for lin
 When a match is found, a user-defined (shell) command is executed. The user can reference fields from the matched line
 within the command.
 
+[![Build Status](https://travis-ci.org/fitzy101/streammon.svg?branch=master)](https://travis-ci.org/fitzy101/streammon)
 Current latest version: v0.2.0
 
 # Building streammon
