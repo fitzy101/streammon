@@ -96,15 +96,27 @@ type streamArgs struct {
 	// timeout   int
 }
 
-// parseConfigFile reads the config from the file, and validates each of the
-// stream's configuration.
-func parseConfigFile(filep string) ([]streamArgs, error) {
-	resp := []streamArgs{}
+// readFromFile retrieves the contents from fileP and returns the []byte.
+func readFromFile(fileP string) ([]byte, error) {
+	resp := []byte{}
 
-	file, err := os.Open(filep)
+	file, err := os.Open(fileP)
 	defer file.Close()
 	if err != nil {
 		return resp, err
+	}
+
+	resp, err = ioutil.ReadAll(file)
+	return resp, err
+}
+
+// parseConfigFile reads the config from input, and validates each of the
+// stream's configuration.
+func parseConfigFile(cFile []byte) ([]streamArgs, error) {
+	resp := []streamArgs{}
+
+	if len(cFile) == 0 {
+		return resp, errors.New(errConfig)
 	}
 
 	type cfgArgs struct {
@@ -116,26 +128,22 @@ func parseConfigFile(filep string) ([]streamArgs, error) {
 	}
 	allConf := make([]cfgArgs, 0)
 
-	conf, err := ioutil.ReadAll(file)
-	if err != nil {
-		return resp, err
-	}
-
-	if err := json.Unmarshal(conf, &allConf); err != nil {
-		return resp, err
-	}
-
-	if len(allConf) == 0 {
+	if err := json.Unmarshal(cFile, &allConf); err != nil {
 		return resp, errors.New(errConfig)
 	}
 
 	for _, c := range allConf {
-		resp = append(resp, constructArgs(
+		arg, err := constructArgs(
 			c.Filepath,
 			c.Delimiter,
 			c.Regexp,
 			c.Command,
-			c.Args))
+			c.Args)
+		if err != nil {
+			return resp, errors.New(errConfigInvalid)
+		}
+
+		resp = append(resp, arg)
 	}
 
 	return resp, nil
@@ -143,7 +151,7 @@ func parseConfigFile(filep string) ([]streamArgs, error) {
 
 // constructArgs validates the command line arguments and returns a valid
 // streamArgs for making a stream.
-func constructArgs(fp, dl, re, cmd, args string) streamArgs {
+func constructArgs(fp, dl, re, cmd, args string) (streamArgs, error) {
 	a := streamArgs{
 		filepath:  fp,
 		delimiter: dl,
@@ -158,17 +166,18 @@ func constructArgs(fp, dl, re, cmd, args string) streamArgs {
 		a.args = append(a.args, arg)
 	}
 	if err := validate(&a); err != nil {
-		exitErr(err.Error())
+		return a, err
 	}
 
-	return a
+	return a, nil
 }
 
 var (
-	errFilepath = "a file must be provided or piped through stdin"
-	errRegexp   = "you must provide a valid regular expression"
-	errCommand  = "you must provide a command to run"
-	errConfig   = "the config file must be specified in json"
+	errFilepath      = "a file must be provided or piped through stdin"
+	errRegexp        = "you must provide a valid regular expression"
+	errCommand       = "you must provide a command to run"
+	errConfig        = "the config file was empty or contained invalid json"
+	errConfigInvalid = "the config file contained invalid streammon config"
 )
 
 func validate(a *streamArgs) error {
@@ -233,7 +242,12 @@ func main() {
 	// If there is a config file, ignore other flags and validate the config
 	// file options.
 	if isCfgFile() {
-		strs, err := parseConfigFile(config)
+		contents, err := readFromFile(config)
+		if err != nil {
+			exitErr(err.Error())
+		}
+
+		strs, err := parseConfigFile(contents)
 		if err != nil {
 			exitErr(err.Error())
 		}
@@ -253,7 +267,11 @@ func main() {
 			}
 		}
 	} else {
-		strArgs := constructArgs(filepath, delimiter, regexp, command, cargs)
+		strArgs, err := constructArgs(filepath, delimiter, regexp, command, cargs)
+		if err != nil {
+			exitErr(err.Error())
+		}
+
 		s, err := stream.NewStream(
 			strArgs.regexp,
 			strArgs.command,
