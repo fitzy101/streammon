@@ -4,6 +4,7 @@ When a match is found, a user-defined (shell) command is executed. The user can 
 within the command.
 
 [![Build Status](https://travis-ci.org/fitzy101/streammon.svg?branch=master)](https://travis-ci.org/fitzy101/streammon)
+
 Current latest version: v0.2.0
 
 # Building streammon
