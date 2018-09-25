@@ -6,6 +6,7 @@ within the command.
 Streammon also supports monitoring more than one stream at a time, when using a configuration file (instead of command line flags). See the 'Configuration file' example.
 
 [![Build Status](https://travis-ci.org/fitzy101/streammon.svg?branch=master)](https://travis-ci.org/fitzy101/streammon)
+[![codecov](https://codecov.io/gh/fitzy101/streammon/branch/master/graph/badge.svg)](https://codecov.io/gh/fitzy101/streammon)
 
 Current latest version: v0.2.0
 
