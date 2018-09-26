@@ -122,3 +122,66 @@ func TestConfig(t *testing.T) {
 	}
 
 }
+
+func TestConstructArgs(t *testing.T) {
+	testTable := []struct {
+		filepath  string
+		delimiter string
+		regexp    string
+		command   string
+		args      string
+		err       error
+		sArgs     *streamArgs
+	}{
+		{
+			filepath:  "/test",
+			delimiter: " ",
+			regexp:    ".*",
+			command:   "touch",
+			args:      "",
+			err:       nil,
+			sArgs: &streamArgs{
+				filepath:  "/test",
+				delimiter: " ",
+				regexp:    ".*",
+				command:   "touch",
+				args:      []string{""},
+			},
+		},
+		{
+			filepath:  "/test",
+			delimiter: " ",
+			regexp:    ".*",
+			command:   "touch",
+			args:      "filename filename2",
+			err:       nil,
+			sArgs: &streamArgs{
+				filepath:  "/test",
+				delimiter: " ",
+				regexp:    ".*",
+				command:   "touch",
+				args: []string{
+					"filename",
+					"filename2",
+				},
+			},
+		},
+	}
+
+	for _, table := range testTable {
+		_, retErr := constructArgs(table.filepath, table.delimiter, table.regexp, table.command, table.args)
+		if retErr == nil && table.err != nil {
+			t.Errorf("No error returned, expected %v", table.err)
+			continue
+		}
+		if retErr != nil && table.err == nil {
+			t.Errorf("Error returned as %v, expected nil.", retErr)
+			continue
+		}
+		if table.err != nil {
+			if retErr.Error() != table.err.Error() {
+				t.Errorf("Error type was incorrect, got %v, want %v.", retErr.Error(), table.err)
+			}
+		}
+	}
+}

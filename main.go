@@ -165,6 +165,7 @@ func constructArgs(fp, dl, re, cmd, args string) (streamArgs, error) {
 	for _, arg := range f {
 		a.args = append(a.args, arg)
 	}
+
 	if err := validate(&a); err != nil {
 		return a, err
 	}
