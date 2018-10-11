@@ -8,20 +8,6 @@ import (
 
 func TestPrepArgs(t *testing.T) {
 	r, _ := setupRegexp("DHCPDISCOVER")
-	args1 := []string{
-		"ip:#{3}",
-		"mac:#{5}",
-		"dev:#{7}",
-	}
-	args2 := []string{
-		"ip:#{3},mac:#{5}",
-	}
-	args3 := []string{
-		"#{0}",
-	}
-	args4 := []string{
-		"ip:#{3},mac:#{5},dev:#{7}",
-	}
 
 	testTable := []struct {
 		s    *Stream
@@ -31,9 +17,29 @@ func TestPrepArgs(t *testing.T) {
 		{
 			s: &Stream{
 				Regexp: r,
-				args:   args1,
+				args:   []string{},
 				delim:  " ",
-				fields: parseFields(args1),
+				fields: parseFields([]string{}),
+			},
+			line: `DHCPREQUEST for 192.168.127.3 from 61:7c:db:fb:45:5e via br1`,
+			exp:  []string{},
+		},
+		{
+			s: &Stream{
+				Regexp: r,
+				args: []string{
+					"ip:#{3}",
+					"mac:#{5}",
+					"dev:#{7}",
+				},
+				delim: " ",
+				fields: parseFields(
+					[]string{
+						"ip:#{3}",
+						"mac:#{5}",
+						"dev:#{7}",
+					},
+				),
 			},
 			line: `DHCPREQUEST for 192.168.127.3 from 61:7c:db:fb:45:5e via br1`,
 			exp: []string{
@@ -45,9 +51,15 @@ func TestPrepArgs(t *testing.T) {
 		{
 			s: &Stream{
 				Regexp: r,
-				args:   args2,
-				delim:  " ",
-				fields: parseFields(args2),
+				args: []string{
+					"ip:#{3},mac:#{5}",
+				},
+				delim: " ",
+				fields: parseFields(
+					[]string{
+						"ip:#{3},mac:#{5}",
+					},
+				),
 			},
 			line: `DHCPREQUEST for 192.168.127.3 from 61:7c:db:fb:45:5e via br1`,
 			exp: []string{
@@ -57,9 +69,15 @@ func TestPrepArgs(t *testing.T) {
 		{
 			s: &Stream{
 				Regexp: r,
-				args:   args3,
-				delim:  " ",
-				fields: parseFields(args3),
+				args: []string{
+					"#{0}",
+				},
+				delim: " ",
+				fields: parseFields(
+					[]string{
+						"#{0}",
+					},
+				),
 			},
 			line: `DHCPREQUEST for 192.168.127.3 from 61:7c:db:fb:45:5e via br1`,
 			exp:  []string{"DHCPREQUEST for 192.168.127.3 from 61:7c:db:fb:45:5e via br1"},
@@ -67,9 +85,15 @@ func TestPrepArgs(t *testing.T) {
 		{
 			s: &Stream{
 				Regexp: r,
-				args:   args4,
-				delim:  " ",
-				fields: parseFields(args4),
+				args: []string{
+					"ip:#{3},mac:#{5},dev:#{7}",
+				},
+				delim: " ",
+				fields: parseFields(
+					[]string{
+						"ip:#{3},mac:#{5},dev:#{7}",
+					},
+				),
 			},
 			line: `DHCPREQUEST for 192.168.127.3 from 61:7c:db:fb:45:5e via br1`,
 			exp: []string{

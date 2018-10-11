@@ -160,10 +160,28 @@ func constructArgs(fp, dl, re, cmd, args string) (streamArgs, error) {
 	}
 
 	// Split up the arguments, we're expecting a quoted string.
-	// Drop any of the other trailing flags.
+	// Check for single-quoted arguments as we need to honor groups of arguments.
+	if strings.Contains(args, "'") {
+		// Extract all pairs of single quoted strings.
+		qC := strings.Count(args, "'")
+		for qC > 1 {
+			idx := strings.Index(args, "'")
+			nextIdx := strings.Index(args[idx+1:], "'")
+			arg := args[idx : idx+nextIdx+2]
+			a.args = append(a.args, arg)
+
+			// remove the processed argument from the original string
+			args = strings.Replace(args, arg, "", 1)
+			qC = strings.Count(args, "'")
+		}
+	}
+
+	// Include the remaining non-quoted strings
 	f := strings.Split(args, " ")
 	for _, arg := range f {
-		a.args = append(a.args, arg)
+		if arg != "" {
+			a.args = append(a.args, arg)
+		}
 	}
 
 	if err := validate(&a); err != nil {

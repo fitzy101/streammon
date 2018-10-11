@@ -97,7 +97,7 @@ func TestConfig(t *testing.T) {
 					"filepath":"/var/log/nginx.log",
 					"regexp":"GET.*\\ 200\\ ",
 					"command":"redis-cli",
-					"args":"publish key 'other value''"
+					"args":"publish key 'other value'"
 				}
 			]`),
 		},
@@ -145,7 +145,7 @@ func TestConstructArgs(t *testing.T) {
 				delimiter: " ",
 				regexp:    ".*",
 				command:   "touch",
-				args:      []string{""},
+				args:      []string{},
 			},
 		},
 		{
@@ -153,7 +153,26 @@ func TestConstructArgs(t *testing.T) {
 			delimiter: " ",
 			regexp:    ".*",
 			command:   "touch",
-			args:      "filename filename2",
+			args:      "foo bar baz",
+			err:       nil,
+			sArgs: &streamArgs{
+				filepath:  "/test",
+				delimiter: " ",
+				regexp:    ".*",
+				command:   "myscript.sh",
+				args: []string{
+					"foo",
+					"bar",
+					"baz",
+				},
+			},
+		},
+		{
+			filepath:  "/test",
+			delimiter: " ",
+			regexp:    ".*",
+			command:   "touch",
+			args:      "foo 'bar baz'",
 			err:       nil,
 			sArgs: &streamArgs{
 				filepath:  "/test",
@@ -161,15 +180,63 @@ func TestConstructArgs(t *testing.T) {
 				regexp:    ".*",
 				command:   "touch",
 				args: []string{
-					"filename",
-					"filename2",
+					"'bar baz'",
+					"foo",
+				},
+			},
+		},
+		{
+			filepath:  "/test",
+			delimiter: " ",
+			regexp:    ".*",
+			command:   "touch",
+			args:      "'bar baz' foo",
+			err:       nil,
+			sArgs: &streamArgs{
+				filepath:  "/test",
+				delimiter: " ",
+				regexp:    ".*",
+				command:   "touch",
+				args: []string{
+					"'bar baz'",
+					"foo",
+				},
+			},
+		},
+		{
+			filepath:  "/test",
+			delimiter: " ",
+			regexp:    ".*",
+			command:   "touch",
+			args:      "'filename filename2'",
+			err:       nil,
+			sArgs: &streamArgs{
+				filepath:  "/test",
+				delimiter: " ",
+				regexp:    ".*",
+				command:   "touch",
+				args: []string{
+					"'filename filename2'",
 				},
 			},
 		},
 	}
 
 	for _, table := range testTable {
-		_, retErr := constructArgs(table.filepath, table.delimiter, table.regexp, table.command, table.args)
+		ret, retErr := constructArgs(table.filepath, table.delimiter, table.regexp, table.command, table.args)
+
+		if table.sArgs != nil {
+			if len(table.sArgs.args) != len(ret.args) {
+				t.Errorf("Returned args were not the same as expected, got %v, want %v.", ret.args, table.sArgs.args)
+			} else {
+				for idx, _ := range table.sArgs.args {
+					if table.sArgs.args[idx] != ret.args[idx] {
+						t.Errorf("Returned args were not the same as expected, got %v, want %v.", ret.args[idx], table.sArgs.args[idx])
+					}
+				}
+			}
+		}
+
 		if retErr == nil && table.err != nil {
 			t.Errorf("No error returned, expected %v", table.err)
 			continue
