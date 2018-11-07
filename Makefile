@@ -5,7 +5,6 @@ PROG=streammon
 
 streammon: $(SRC)
 	go get -t ./...
-	go test -race -coverprofile=coverage.txt -covermode=atomic
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 	$(GC) $(GOBUILDFLAGS) -o $(PROG) $(SRC)
 	chmod +x $(PROG)
