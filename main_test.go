@@ -180,8 +180,8 @@ func TestConstructArgs(t *testing.T) {
 				regexp:    ".*",
 				command:   "touch",
 				args: []string{
-					"'bar baz'",
 					"foo",
+					"'bar baz'",
 				},
 			},
 		},
@@ -220,6 +220,65 @@ func TestConstructArgs(t *testing.T) {
 				},
 			},
 		},
+		{
+			filepath:  "/test",
+			delimiter: " ",
+			regexp:    ".*",
+			command:   "touch",
+			args:      "one with several 'filename filename2'",
+			err:       nil,
+			sArgs: &streamArgs{
+				filepath:  "/test",
+				delimiter: " ",
+				regexp:    ".*",
+				command:   "touch",
+				args: []string{
+					"one",
+					"with",
+					"several",
+					"'filename filename2'",
+				},
+			},
+		},
+		{
+			filepath:  "/test",
+			delimiter: " ",
+			regexp:    ".*",
+			command:   "touch",
+			args:      "foo 'bar baz' fuzz",
+			err:       nil,
+			sArgs: &streamArgs{
+				filepath:  "/test",
+				delimiter: " ",
+				regexp:    ".*",
+				command:   "touch",
+				args: []string{
+					"foo",
+					"'bar baz'",
+					"fuzz",
+				},
+			},
+		},
+		{
+			filepath:  "/test",
+			delimiter: " ",
+			regexp:    ".*",
+			command:   "touch",
+			args:      "foo 'bar baz' fuzz 'groups are hard'",
+			err:       nil,
+			sArgs: &streamArgs{
+				filepath:  "/test",
+				delimiter: " ",
+				regexp:    ".*",
+				command:   "touch",
+				args: []string{
+					"foo",
+					"'bar baz'",
+					"fuzz",
+					"'groups are hard'",
+				},
+			},
+		},
 	}
 
 	for _, table := range testTable {
@@ -229,7 +288,7 @@ func TestConstructArgs(t *testing.T) {
 			if len(table.sArgs.args) != len(ret.args) {
 				t.Errorf("Returned args were not the same as expected, got %v, want %v.", ret.args, table.sArgs.args)
 			} else {
-				for idx, _ := range table.sArgs.args {
+				for idx := range table.sArgs.args {
 					if table.sArgs.args[idx] != ret.args[idx] {
 						t.Errorf("Returned args were not the same as expected, got %v, want %v.", ret.args[idx], table.sArgs.args[idx])
 					}

@@ -3,11 +3,13 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	re "regexp"
@@ -152,6 +154,7 @@ func parseConfigFile(cFile []byte) ([]streamArgs, error) {
 // constructArgs validates the command line arguments and returns a valid
 // streamArgs for making a stream.
 func constructArgs(fp, dl, re, cmd, args string) (streamArgs, error) {
+
 	a := streamArgs{
 		filepath:  fp,
 		delimiter: dl,
@@ -159,30 +162,50 @@ func constructArgs(fp, dl, re, cmd, args string) (streamArgs, error) {
 		command:   cmd,
 	}
 
-	// Split up the arguments, we're expecting a quoted string.
-	// Check for single-quoted arguments as we need to honor groups of arguments.
-	if strings.Contains(args, "'") {
-		// Extract all pairs of single quoted strings.
-		qC := strings.Count(args, "'")
-		for qC > 1 {
-			idx := strings.Index(args, "'")
-			nextIdx := strings.Index(args[idx+1:], "'")
-			arg := args[idx : idx+nextIdx+2]
-			a.args = append(a.args, arg)
+	// Parse the provided arguments from left to right. The argument is either
+	// space separated strings or a quoted string with spaces preserved.
+	parser := func(r io.Reader) []string {
+		var buf bytes.Buffer
+		quote := '\''
+		space := ' '
+		eof := rune(0)
+		ret := []string{}
+		argsRd := bufio.NewReader(r)
 
-			// remove the processed argument from the original string
-			args = strings.Replace(args, arg, "", 1)
-			qC = strings.Count(args, "'")
+		// Wraps any ReadRune() error with eof to stop parsing.
+		read := func(a *bufio.Reader) rune {
+			ch, _, err := argsRd.ReadRune()
+			if err != nil {
+				return eof
+			}
+			return ch
 		}
+
+		for {
+			if ch := read(argsRd); ch == eof {
+				break
+			} else if ch == space {
+				continue
+			} else if ch == quote {
+				buf.WriteRune(ch)
+				for ch = read(argsRd); ch != quote && ch != eof; ch = read(argsRd) {
+					buf.WriteRune(ch)
+				}
+				buf.WriteRune(quote) // preserve the last quote
+			} else {
+				buf.WriteRune(ch)
+				for ch = read(argsRd); ch != space && ch != eof; ch = read(argsRd) {
+					buf.WriteRune(ch)
+				}
+			}
+			ret = append(ret, buf.String())
+			buf.Reset()
+		}
+
+		return ret
 	}
 
-	// Include the remaining non-quoted strings
-	f := strings.Split(args, " ")
-	for _, arg := range f {
-		if arg != "" {
-			a.args = append(a.args, arg)
-		}
-	}
+	a.args = parser(strings.NewReader(args))
 
 	if err := validate(&a); err != nil {
 		return a, err
