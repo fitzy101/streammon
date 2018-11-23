@@ -134,7 +134,6 @@ The configuration format is a JSON array, and has the same fields as the command
 - Add flag to start the file read from the end of a file.
 
 ## Known issues
-- Fix the argument passing to allow for quoted arguments.
 - Submit issues on Github.
 
 # License
