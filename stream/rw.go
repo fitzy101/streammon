@@ -56,7 +56,7 @@ func NewSubscriber(s *Stream) Subscriber {
 }
 
 // NewPublisher returns an encapsulated RW allowing the consumer to
-// subscribe to text coming from the Stream.
+// publish text to any subscribers.
 func NewPublisher(s *Stream) Publisher {
 	srw := RW{
 		stream:   s,
