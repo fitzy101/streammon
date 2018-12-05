@@ -118,7 +118,6 @@ func parseConfigFile(cFile []byte) ([]streamArgs, error) {
 	resp := []streamArgs{}
 
 	if len(cFile) == 0 {
-		fmt.Println("here with cfile ", string(cFile))
 		return resp, errors.New(errConfig)
 	}
 
@@ -132,7 +131,6 @@ func parseConfigFile(cFile []byte) ([]streamArgs, error) {
 	allConf := make([]cfgArgs, 0)
 
 	if err := json.Unmarshal(cFile, &allConf); err != nil {
-		fmt.Println("here with err ", err.Error())
 		return resp, errors.New(errConfig)
 	}
 
@@ -285,12 +283,10 @@ func getStreams(cfg, filepath, delimiter, regexp, command, cargs string) ([]*str
 			return streams, err
 		}
 
-		fmt.Println("here with filepath ", filepath)
 		strs, err := parseConfigFile(contents)
 		if err != nil {
 			return streams, err
 		}
-		fmt.Println("here2")
 
 		// Make streams for all of the configured files.
 		for _, str := range strs {
