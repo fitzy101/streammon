@@ -6,7 +6,6 @@ import (
 	"os"
 	"sync"
 	"testing"
-	"time"
 )
 
 func TestValidate(t *testing.T) {
@@ -377,7 +376,6 @@ func TestWatchStream(t *testing.T) {
 	if err != nil {
 		t.Errorf("got error opening temp file: %v", err)
 	}
-	defer os.Remove(tmpfile.Name())
 	if _, err := tmpfile.Write(content); err != nil {
 		t.Errorf("got error writing to temp file: %v", err)
 	}
@@ -408,16 +406,13 @@ func TestWatchStream(t *testing.T) {
 
 	var wg sync.WaitGroup
 	for _, s := range streams {
+		wg.Add(1)
 		go watchStream(s, &wg)
 	}
 
 	// force close of the stream
-	go func() {
-		wg.Add(1)
-		<-time.After(500 * time.Millisecond)
-		wg.Done()
-	}()
-
+	os.Remove(tmpfile.Name())
+	wg.Done()
 	wg.Wait()
 }
 
