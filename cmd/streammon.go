@@ -118,6 +118,7 @@ func parseConfigFile(cFile []byte) ([]streamArgs, error) {
 	resp := []streamArgs{}
 
 	if len(cFile) == 0 {
+		fmt.Println("here with cfile ", string(cFile))
 		return resp, errors.New(errConfig)
 	}
 
@@ -131,6 +132,7 @@ func parseConfigFile(cFile []byte) ([]streamArgs, error) {
 	allConf := make([]cfgArgs, 0)
 
 	if err := json.Unmarshal(cFile, &allConf); err != nil {
+		fmt.Println("here with err ", err.Error())
 		return resp, errors.New(errConfig)
 	}
 
@@ -225,7 +227,7 @@ var (
 func validate(a *streamArgs) error {
 	// We need a filepath if we're watching streams specified in a config
 	// file.
-	if isCfgFile() {
+	if isCfgFile(config) {
 		if a.filepath == "" {
 			return errors.New(errFilepath)
 		}
@@ -252,6 +254,7 @@ func validate(a *streamArgs) error {
 	}
 
 	return nil
+
 }
 
 // isStdin returns true when file has data piped from stdin.
@@ -262,37 +265,32 @@ func isStdin() bool {
 
 // isCfgFile return true when a configuration file has been specified. Used
 // to distinguish between a Stdin read and a filepath read.
-func isCfgFile() bool {
-	if config == "" {
+func isCfgFile(cfg string) bool {
+	if cfg == "" {
 		return false
 	}
 	return true
 }
 
-func main() {
-	flag.Usage = func() {
-		exitErr(usage())
-	}
-	flag.Parse()
-
-	if len(os.Args) == 1 {
-		exitErr(usage())
-	}
-
+// getStreams constructs the streams based on configuration and returns the
+// stream.Stream array as required.
+func getStreams(cfg, filepath, delimiter, regexp, command, cargs string) ([]*stream.Stream, error) {
 	var streams []*stream.Stream
 
 	// If there is a config file, ignore other flags and validate the config
 	// file options.
-	if isCfgFile() {
-		contents, err := readFromFile(config)
+	if isCfgFile(cfg) {
+		contents, err := readFromFile(cfg)
 		if err != nil {
-			exitErr(err.Error())
+			return streams, err
 		}
 
+		fmt.Println("here with filepath ", filepath)
 		strs, err := parseConfigFile(contents)
 		if err != nil {
-			exitErr(err.Error())
+			return streams, err
 		}
+		fmt.Println("here2")
 
 		// Make streams for all of the configured files.
 		for _, str := range strs {
@@ -305,7 +303,7 @@ func main() {
 			)
 			streams = append(streams, s)
 			if err != nil {
-				exitErr(err.Error())
+				return streams, err
 			}
 		}
 	} else {
@@ -322,9 +320,26 @@ func main() {
 			strArgs.args,
 		)
 		if err != nil {
-			exitErr("error creating stream.\n")
+			return streams, err
 		}
 		streams = append(streams, s)
+	}
+	return streams, nil
+}
+
+func main() {
+	flag.Usage = func() {
+		exitErr(usage())
+	}
+	flag.Parse()
+
+	if len(os.Args) == 1 {
+		exitErr(usage())
+	}
+
+	streams, err := getStreams(config, filepath, delimiter, regexp, command, cargs)
+	if err != nil {
+		exitErr(err.Error())
 	}
 
 	if log {
