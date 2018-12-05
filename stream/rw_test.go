@@ -21,7 +21,8 @@ func TestSubscriber(t *testing.T) {
 	}
 
 	srw := NewSubscriber(s)
-	pub := NewPublisher(s)
+	pub := srw.(*RW)
+
 	if srw.Err() != nil {
 		t.Errorf(srw.Err().Error())
 	}
