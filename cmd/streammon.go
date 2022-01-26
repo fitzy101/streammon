@@ -16,7 +16,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/fitzy101/streammon/stream"
+	"github.com/fitzy101/streammon/internal/stream"
 )
 
 var (
