@@ -337,7 +337,7 @@ func TestGetStreams(t *testing.T) {
 			ret:       1,
 		},
 		{
-			config:    "../examples/streammon.conf",
+			config:    "../../examples/streammon.conf",
 			filepath:  "a",
 			delimiter: "",
 			regexp:    ".*",
@@ -372,7 +372,7 @@ func TestGetStreams(t *testing.T) {
 func TestWatchStream(t *testing.T) {
 	// End to end test of the watchStream function.
 	content := []byte("GET Example Request\nPOST Example Request")
-	tmpfile, err := ioutil.TempFile("../examples/", "test_file")
+	tmpfile, err := ioutil.TempFile("../../examples/", "test_file")
 	if err != nil {
 		t.Errorf("got error opening temp file: %v", err)
 	}

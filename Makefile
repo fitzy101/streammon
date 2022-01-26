@@ -1,17 +1,15 @@
 GOBUILDFLAGS=
 GC=go build
-SRC=cmd/streammon.go
+SRC=cmd/streammon/main.go
 PROG=streammon
+DIST=_dist
 
-streammon: $(SRC) depend test
-	$(GC) $(GOBUILDFLAGS) -o $(PROG) $(SRC)
+default: $(SRC) test
+	$(GC) $(GOBUILDFLAGS) -o $(DIST)/$(PROG) $(SRC)
 	chmod +x $(PROG)
 
 test:
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
-
-depend:
-	go get -t ./...
 
 cover: test
 	go tool cover -html coverage.txt
