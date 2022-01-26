@@ -5,11 +5,6 @@ within the command.
 
 Streammon also supports monitoring more than one stream at a time, when using a configuration file (instead of command line flags). See the 'Configuration file' example.
 
-[![Build Status](https://travis-ci.org/fitzy101/streammon.svg?branch=master)](https://travis-ci.org/fitzy101/streammon)
-[![codecov](https://codecov.io/gh/fitzy101/streammon/branch/master/graph/badge.svg)](https://codecov.io/gh/fitzy101/streammon)
-[![codebeat badge](https://codebeat.co/badges/f93e106a-c6c3-4fd8-b108-5ee13a7a9bb4)](https://codebeat.co/projects/github-com-fitzy101-streammon-master)
-
-
 Current latest version: v0.3.0
 
 # Building streammon
@@ -41,7 +36,7 @@ chmod +x streammon
 ```
 
 You can then add the executable to somewhere in your $PATH.
-Streammon was written with go 1.10.3, but is tested to work with versions above 1.6.
+Streammon was written with go 1.17, but is tested to work with versions above 1.6.
 
 # Usage
 ```
