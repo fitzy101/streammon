@@ -1,12 +1,15 @@
-GOBUILDFLAGS=
-GC=go build
-SRC=cmd/streammon/main.go
 PROG=streammon
 DIST=_dist
+SRC=cmd/streammon/main.go
+
+GOBUILDFLAGS=
+ARCH=$(or $(GOARCH),amd64)
+OS=$(or $(GOOS),linux)
+OUTPUT=$(DIST)/$(PROG)-$(OS)-$(ARCH)
 
 default: $(SRC) test
-	$(GC) $(GOBUILDFLAGS) -o $(DIST)/$(PROG) $(SRC)
-	chmod +x $(PROG)
+	go build $(GOBUILDFLAGS) -o $(OUTPUT) $(SRC)
+	chmod +x $(OUTPUT)
 
 test:
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
